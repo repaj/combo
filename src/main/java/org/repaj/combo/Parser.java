@@ -88,6 +88,17 @@ public interface Parser<O, I> {
 
     /**
      * Creates parser that attempt to parse using this parser, and if this parser fails,
+     * newly created parser returns value.
+     *
+     * @param output an output value
+     * @return newly created {@code Parser} that attempts to parse
+     */
+    default Parser<O, I> orElseSucceed(O output) {
+        return input -> parse(input).recoverWith(cause -> Try.success(new Result<>(output, input)));
+    }
+
+    /**
+     * Creates parser that attempt to parse using this parser, and if this parser fails,
      * newly created parser fails with given message.
      *
      * @param message a fail message
