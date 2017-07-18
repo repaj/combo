@@ -23,6 +23,7 @@
 package org.repaj.combo;
 
 import java.util.Optional;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -110,15 +111,11 @@ public interface RepetitionParsers {
      * @return described parser
      */
     default <O, I> Parser<Stream<O>, I> between(Parser<O, I> parser, int from, int to) {
-        if (from < 0 || to < 0) {
-            throw new IllegalArgumentException();
-        }
-
-        if (from <= to) {
-            return exactly(parser, to).orElse(() -> between(parser, from, to - 1));
-        } else {
-            return Parser.succeed(Stream.empty());
-        }
+        return IntStream
+                .rangeClosed(from, to)
+                .mapToObj(operand -> exactly(parser, operand))
+                .reduce((a, b) -> b.orElse(() -> a))
+                .orElse(Parser.succeed(Stream.empty()));
     }
 
     /**
