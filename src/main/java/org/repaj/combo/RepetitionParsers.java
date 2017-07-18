@@ -23,7 +23,6 @@
 package org.repaj.combo;
 
 import java.util.Optional;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -82,11 +81,12 @@ public interface RepetitionParsers {
             return Parser.succeed(Stream.empty());
         }
 
-        Optional<Parser<Stream<O>, I>> first = Stream.iterate(
-                parser.map(Stream::of),
-                p -> parser.flatMap(o -> p.map(os -> Stream.concat(Stream.of(o), os))))
-                .skip(count - 1)
-                .findFirst();
+        Optional<Parser<Stream<O>, I>> first = Stream
+                        .<Parser<Stream<O>, I>>iterate(
+                                Parser.succeed(Stream.empty()),
+                                p -> parser.map(Stream::of).flatMap(o -> p.map(os -> Stream.concat(o, os))))
+                        .skip(count)
+                        .findFirst();
 
         assert first.isPresent();
 
@@ -103,8 +103,8 @@ public interface RepetitionParsers {
      * @return described parser
      */
     default <O, I> Parser<Stream<O>, I> atLeast(Parser<O, I> parser, int count) {
-        return exactly(parser, count).flatMap(oStream1 ->
-                zeroOrMore(parser).map(oStream2 -> Stream.concat(oStream1, oStream2)));
+        return exactly(parser, count).flatMap(os1 ->
+                zeroOrMore(parser).map(os2 -> Stream.concat(os1, os2)));
     }
 
     /**
@@ -122,9 +122,12 @@ public interface RepetitionParsers {
             throw new IllegalArgumentException();
         }
 
-        Optional<Parser<Stream<O>, I>> reduce = IntStream
-                .rangeClosed(from, to)
-                .mapToObj(i -> exactly(parser, i))
+        Optional<Parser<Stream<O>, I>> reduce = Stream
+                .<Parser<Stream<O>, I>>iterate(
+                        Parser.succeed(Stream.empty()),
+                        p -> parser.map(Stream::of).flatMap(o -> p.map(os -> Stream.concat(o, os))))
+                .skip(from)
+                .limit(to - from)
                 .reduce((a, b) -> b.orElse(() -> a));
 
         assert reduce.isPresent();
