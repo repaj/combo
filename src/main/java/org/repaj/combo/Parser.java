@@ -34,6 +34,18 @@ import java.util.function.Supplier;
 @FunctionalInterface
 public interface Parser<O, I> {
     /**
+     * Creates parser that always returns {@code output}.
+     *
+     * @param output an output
+     * @param <O>    type of output
+     * @param <I>    type of input
+     * @return newly created {@code Parser}
+     */
+    static <O, I> Parser<O, I> succeed(O output) {
+        return input -> Try.success(new Result<>(output, input));
+    }
+
+    /**
      * Parses an input.
      *
      * @param input an input
@@ -60,7 +72,7 @@ public interface Parser<O, I> {
      * @return newly created {@code Parser} that maps output
      */
     default <P> Parser<P, I> map(Function<? super O, ? extends P> function) {
-        return flatMap(o -> input -> Try.success(new Result<>(function.apply(o), input)));
+        return flatMap(o -> succeed(function.apply(o)));
     }
 
     /**
@@ -94,7 +106,18 @@ public interface Parser<O, I> {
      * @return newly created {@code Parser} that attempts to parse
      */
     default Parser<O, I> orElseSucceed(O output) {
-        return input -> parse(input).recoverWith(cause -> Try.success(new Result<>(output, input)));
+        return orElseSucceed(() -> output);
+    }
+
+    /**
+     * Creates parser that attempt to parse using this parser, and if this parser fails,
+     * newly created parser returns supplied value.
+     *
+     * @param supplier an value supplier
+     * @return newly created {@code Parser} that attempts to parse
+     */
+    default Parser<O, I> orElseSucceed(Supplier<? extends O> supplier) {
+        return orElse(() -> succeed(supplier.get()));
     }
 
     /**
