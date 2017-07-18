@@ -77,20 +77,13 @@ public interface RepetitionParsers {
      * @return described parser
      */
     default <O, I> Parser<Stream<O>, I> exactly(Parser<O, I> parser, int count) {
-        if (count <= 0) {
-            return Parser.succeed(Stream.empty());
-        }
-
-        Optional<Parser<Stream<O>, I>> first = Stream
-                        .<Parser<Stream<O>, I>>iterate(
-                                Parser.succeed(Stream.empty()),
-                                p -> parser.map(Stream::of).flatMap(o -> p.map(os -> Stream.concat(o, os))))
-                        .skip(count)
-                        .findFirst();
-
-        assert first.isPresent();
-
-        return first.get();
+        return Stream
+                .<Parser<Stream<O>, I>>iterate(
+                        Parser.succeed(Stream.empty()),
+                        p -> parser.map(Stream::of).flatMap(o -> p.map(os -> Stream.concat(o, os))))
+                .skip(count)
+                .findFirst()
+                .orElseThrow(IllegalArgumentException::new);
     }
 
     /**
@@ -118,21 +111,14 @@ public interface RepetitionParsers {
      * @return described parser
      */
     default <O, I> Parser<Stream<O>, I> between(Parser<O, I> parser, int from, int to) {
-        if (from < 0 || to < 0 || from > to) {
-            throw new IllegalArgumentException();
-        }
-
-        Optional<Parser<Stream<O>, I>> reduce = Stream
+        return Stream
                 .<Parser<Stream<O>, I>>iterate(
                         Parser.succeed(Stream.empty()),
                         p -> parser.map(Stream::of).flatMap(o -> p.map(os -> Stream.concat(o, os))))
                 .skip(from)
                 .limit(to - from)
-                .reduce((a, b) -> b.orElse(() -> a));
-
-        assert reduce.isPresent();
-
-        return reduce.get();
+                .reduce((a, b) -> b.orElse(() -> a))
+                .orElseThrow(IllegalArgumentException::new);
     }
 
     /**
