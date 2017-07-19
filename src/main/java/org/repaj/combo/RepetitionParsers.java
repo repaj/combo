@@ -39,7 +39,7 @@ public interface RepetitionParsers {
      * @param <I>    type of input
      * @return described parser
      */
-    default <O, I> Parser<Optional<O>, I> oneOrZero(Parser<O, I> parser) {
+    default <O, I> Parser<Optional<O>, I> zeroOrOne(Parser<O, I> parser) {
         return parser.map(Optional::ofNullable).orElseSucceed(Optional.empty());
     }
 
