@@ -27,13 +27,15 @@ import java.util.function.Function;
 
 /**
  * A parser that uses {@link Scanner} as an input.
+ *
  * @author Konrad Kleczkowski
  */
 public class ScannerParser {
     /**
      * Creates parser that attempt use {@link Scanner} to obtain an output value.
+     *
      * @param function a {@link Scanner}-operating function
-     * @param <O> type of output
+     * @param <O>      type of output
      * @return newly created parser
      */
     public static <O> Parser<O, Scanner> next(Function<Scanner, ? extends O> function) {
