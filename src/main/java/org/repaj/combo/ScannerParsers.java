@@ -26,9 +26,17 @@ import java.lang.reflect.Field;
 import java.util.Scanner;
 
 /**
+ * A parser that uses {@link Scanner} to parse an input.
+ *
  * @author Konrad Kleczkowski
  */
 public class ScannerParsers {
+    /**
+     * Creates parser that matches begin of input with regex pattern.
+     *
+     * @param regex a regex pattern
+     * @return newly created parser
+     */
     public static Parser<String, Scanner> pattern(String regex) {
         return input -> {
             input.useDelimiter("");
