@@ -257,6 +257,10 @@ public interface Try<T> {
         return map(Optional::ofNullable).orElse(Optional.empty());
     }
 
+    /**
+     * If a value is present, apply value to the given consumer, otherwise do nothing.
+     * @param consumer a consumer
+     */
     default void ifPresent(Consumer<? super T> consumer) {
         flatMap(t -> {
             consumer.accept(t);
@@ -264,6 +268,11 @@ public interface Try<T> {
         });
     }
 
+    /**
+     * If a value is absent, apply the cause of absence to consumer, otherwise do nothing.
+     * @param consumer a cause consumer
+     * @return this {@code Try}
+     */
     default Try<T> onFailure(Consumer<? super Throwable> consumer) {
         return recoverWith(throwable -> {
             consumer.accept(throwable);
