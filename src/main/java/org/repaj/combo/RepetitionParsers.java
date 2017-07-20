@@ -30,7 +30,7 @@ import java.util.stream.Stream;
  *
  * @author Konrad Kleczkowski
  */
-public interface RepetitionParsers {
+public class RepetitionParsers {
     /**
      * Creates parser that handles one or zero occurrences of {@code parser} match.
      *
@@ -39,7 +39,7 @@ public interface RepetitionParsers {
      * @param <I>    type of input
      * @return described parser
      */
-    default <O, I> Parser<Optional<O>, I> zeroOrOne(Parser<O, I> parser) {
+    public static <O, I> Parser<Optional<O>, I> zeroOrOne(Parser<O, I> parser) {
         return parser.map(Optional::ofNullable).orElseSucceed(Optional.empty());
     }
 
@@ -51,7 +51,7 @@ public interface RepetitionParsers {
      * @param <I>    type of input
      * @return described parser
      */
-    default <O, I> Parser<Stream<O>, I> zeroOrMore(Parser<O, I> parser) {
+    public static <O, I> Parser<Stream<O>, I> zeroOrMore(Parser<O, I> parser) {
         return oneOrMore(parser).orElseSucceed(Stream.empty());
     }
 
@@ -63,7 +63,7 @@ public interface RepetitionParsers {
      * @param <I>    type of input
      * @return described parser
      */
-    default <O, I> Parser<Stream<O>, I> oneOrMore(Parser<O, I> parser) {
+    public static <O, I> Parser<Stream<O>, I> oneOrMore(Parser<O, I> parser) {
         return parser.map(Stream::of).flatMap(o -> zeroOrMore(parser).map(os -> Stream.concat(o, os)));
     }
 
@@ -76,7 +76,7 @@ public interface RepetitionParsers {
      * @param <I>    type of input
      * @return described parser
      */
-    default <O, I> Parser<Stream<O>, I> exactly(Parser<O, I> parser, int count) {
+    public static <O, I> Parser<Stream<O>, I> exactly(Parser<O, I> parser, int count) {
         return Stream
                 .<Parser<Stream<O>, I>>iterate(
                         Parser.succeed(Stream.empty()),
@@ -95,7 +95,7 @@ public interface RepetitionParsers {
      * @param <I>    type of input
      * @return described parser
      */
-    default <O, I> Parser<Stream<O>, I> atLeast(Parser<O, I> parser, int count) {
+    public static <O, I> Parser<Stream<O>, I> atLeast(Parser<O, I> parser, int count) {
         return exactly(parser, count).flatMap(os1 ->
                 zeroOrMore(parser).map(os2 -> Stream.concat(os1, os2)));
     }
@@ -110,7 +110,7 @@ public interface RepetitionParsers {
      * @param <I>    type of input
      * @return described parser
      */
-    default <O, I> Parser<Stream<O>, I> between(Parser<O, I> parser, int from, int to) {
+    public static <O, I> Parser<Stream<O>, I> between(Parser<O, I> parser, int from, int to) {
         return Stream
                 .<Parser<Stream<O>, I>>iterate(
                         Parser.succeed(Stream.empty()),
@@ -130,7 +130,7 @@ public interface RepetitionParsers {
      * @param <I>       type of input
      * @return described parser
      */
-    default <O, I> Parser<Stream<O>, I> separatedByZeroOrMore(Parser<O, I> parser, Parser<?, I> separator) {
+    public static <O, I> Parser<Stream<O>, I> separatedByZeroOrMore(Parser<O, I> parser, Parser<?, I> separator) {
         return separatedByOneOrMore(parser, separator).orElseSucceed(Stream.empty());
     }
 
@@ -143,7 +143,7 @@ public interface RepetitionParsers {
      * @param <I>       type of input
      * @return described parser
      */
-    default <O, I> Parser<Stream<O>, I> separatedByOneOrMore(Parser<O, I> parser, Parser<?, I> separator) {
+    public static <O, I> Parser<Stream<O>, I> separatedByOneOrMore(Parser<O, I> parser, Parser<?, I> separator) {
         return parser.map(Stream::of).flatMap(o ->
                 zeroOrMore(separator.flatMap(o1 -> parser)).map(os -> Stream.concat(o, os)));
     }
@@ -158,7 +158,7 @@ public interface RepetitionParsers {
      * @param <I>    type of input
      * @return described parser
      */
-    default <O, I> Parser<O, I> surroundedWith(Parser<O, I> parser, Parser<?, I> begin, Parser<?, I> end) {
+    public static <O, I> Parser<O, I> surroundedWith(Parser<O, I> parser, Parser<?, I> begin, Parser<?, I> end) {
         return begin.flatMap(i -> parser.flatMap(o -> end.map(i1 -> o)));
     }
 }
