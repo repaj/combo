@@ -22,32 +22,20 @@
 
 package org.repaj.combo;
 
-import java.io.IOException;
-import java.io.Reader;
 import java.util.Scanner;
 
 /**
  * @author Konrad Kleczkowski
  */
-public class PositionedReaderParser implements RegexParsers<PositionedReader> {
-    @Override
-    public Parser<String, PositionedReader> pattern(String regex) {
+public class ScannerParsers {
+    public static Parser<String, Scanner> pattern(String regex) {
         return input -> {
-            Reader reader = input.getReader();
-            try {
-                reader.mark(input.getPosition());
-                reader.reset();
-            } catch (IOException e) {
-                return Try.fail(new ParseException("I/O error", e));
-            }
-            Scanner scanner = new Scanner(reader);
-            scanner.useDelimiter("");
-            String match = scanner.findWithinHorizon("^" + regex, 0);
+            input.useDelimiter("");
+            String match = input.findWithinHorizon(regex, 0);
             if (match != null) {
-                return Try.success(new Parser.Result<>(match,
-                        new PositionedReader(input.getPosition() + match.length(), reader)));
+                return Try.success(new Parser.Result<>(match, input));
             } else {
-                return Try.fail(new ParseException(regex + " expected", scanner.ioException()));
+                return Try.fail(new ParseException(regex + " expected", input.ioException()));
             }
         };
     }

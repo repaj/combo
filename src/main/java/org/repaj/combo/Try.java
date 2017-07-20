@@ -26,6 +26,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -254,5 +255,19 @@ public interface Try<T> {
      */
     default Optional<T> toOptional() {
         return map(Optional::ofNullable).orElse(Optional.empty());
+    }
+
+    default void ifPresent(Consumer<? super T> consumer) {
+        flatMap(t -> {
+            consumer.accept(t);
+            return this;
+        });
+    }
+
+    default Try<T> onFailure(Consumer<? super Throwable> consumer) {
+        return recoverWith(throwable -> {
+            consumer.accept(throwable);
+            return this;
+        });
     }
 }
