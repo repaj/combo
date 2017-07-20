@@ -44,8 +44,7 @@ public class ScannerParsers {
 
     private static int getScannerPosition(Scanner scanner) {
         try {
-            Class<? extends Scanner> scannerClass = scanner.getClass();
-            Field field = scannerClass.getDeclaredField("position");
+            Field field = Scanner.class.getDeclaredField("position");
             field.setAccessible(true);
             return (int) field.get(scanner);
         } catch (NoSuchFieldException | IllegalAccessException e) {
