@@ -34,20 +34,10 @@ public interface RegexParsers<I> {
     /**
      * Creates parser that uses regex pattern and returns matched string.
      *
-     * @param pattern a regex pattern
-     * @return parser that returns matched string by given pattern
-     */
-    Parser<String, I> pattern(Pattern pattern);
-
-    /**
-     * Creates parser that uses regex pattern and returns matched string.
-     *
      * @param regex a regex pattern
      * @return parser that returns matched string by given pattern
      */
-    default Parser<String, I> pattern(String regex) {
-        return pattern(Pattern.compile(regex));
-    }
+    Parser<String, I> pattern(String regex);
 
     /**
      * Creates parser that trims whitespace on the beginning of input.
