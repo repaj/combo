@@ -32,12 +32,22 @@ import java.util.regex.Pattern;
  */
 public interface RegexParsers<I> {
     /**
+     * Creates parser that uses compiled regex pattern and returns matched string.
+     *
+     * @param pattern a compiled regex pattern
+     * @return parser that returns matched string by given pattern
+     */
+    Parser<String, I> pattern(Pattern pattern);
+
+    /**
      * Creates parser that uses regex pattern and returns matched string.
      *
      * @param regex a regex pattern
      * @return parser that returns matched string by given pattern
      */
-    Parser<String, I> pattern(String regex);
+    default Parser<String, I> pattern(String regex) {
+        return pattern(Pattern.compile(regex));
+    }
 
     /**
      * Creates parser that trims whitespace on the beginning of input.
