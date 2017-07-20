@@ -46,7 +46,7 @@ public interface Try<T> {
      * @param <T>      type of value
      * @return a {@code Try}
      */
-    static <T> Try<T> attempt(Callable<T> callable) {
+    static <T> Try<T> of(Callable<T> callable) {
         try {
             return success(callable.call());
         } catch (Exception e) {

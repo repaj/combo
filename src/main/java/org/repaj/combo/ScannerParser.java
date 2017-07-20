@@ -39,6 +39,6 @@ public class ScannerParser {
      * @return newly created parser
      */
     public static <O> Parser<O, Scanner> next(Function<Scanner, ? extends O> function) {
-        return input -> Try.attempt(() -> new Parser.Result<>(function.apply(input), input));
+        return input -> Try.of(() -> new Parser.Result<>(function.apply(input), input));
     }
 }
