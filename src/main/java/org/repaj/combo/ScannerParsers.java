@@ -22,6 +22,7 @@
 
 package org.repaj.combo;
 
+import java.lang.reflect.Field;
 import java.util.Scanner;
 
 /**
@@ -31,12 +32,24 @@ public class ScannerParsers {
     public static Parser<String, Scanner> pattern(String regex) {
         return input -> {
             input.useDelimiter("");
+            int position = getScannerPosition(input);
             String match = input.findWithinHorizon(regex, 0);
-            if (match != null) {
+            if (match != null && input.match().start() == position) {
                 return Try.success(new Parser.Result<>(match, input));
             } else {
                 return Try.fail(new ParseException(regex + " expected", input.ioException()));
             }
         };
+    }
+
+    private static int getScannerPosition(Scanner scanner) {
+        try {
+            Class<? extends Scanner> scannerClass = scanner.getClass();
+            Field field = scannerClass.getDeclaredField("position");
+            field.setAccessible(true);
+            return (int) field.get(scanner);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }
