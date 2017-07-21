@@ -27,6 +27,7 @@ import org.repaj.combo.Parser;
 
 import java.util.AbstractMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collector;
 
 import static java.util.function.Function.identity;
@@ -37,26 +38,30 @@ import static org.repaj.combo.RepetitionParsers.surroundedWith;
  * @author Konrad Kleczkowski
  */
 public interface JsonParser<I> {
-    Parser<String, I> next(String regex);
+    Parser<String, I> next(Pattern pattern);
+
+    default Parser<String, I> token(String regex) {
+        return next(Pattern.compile("\\s*")).flatMap(s -> next(Pattern.compile(regex)));
+    }
 
     default <O> Parser<O, I> jsonNull() {
-        return next("null").map(s -> null);
+        return token("null").map(s -> null);
     }
 
     default Parser<Boolean, I> jsonBoolean() {
-        return next("(true)|(false)").map(Boolean::parseBoolean);
+        return token("(true)|(false)").map(Boolean::parseBoolean);
     }
 
     default Parser<Integer, I> jsonInteger() {
-        return next("[+-]?[0-9]+").map(Integer::parseInt);
+        return token("[+-]?[0-9]+").map(Integer::parseInt);
     }
 
     default Parser<Double, I> jsonDouble() {
-        return next("[+-]?[0-9]+(\\.[0-9]+([eE]?[0-9]+)?)?").map(Double::parseDouble);
+        return token("[+-]?[0-9]+(\\.[0-9]+([eE]?[0-9]+)?)?").map(Double::parseDouble);
     }
 
     default Parser<String, I> jsonString() {
-        return next("\"([^\"\\\\]|(\\\\[\"\\\\/bfnrt])|(\\\\u[0-9a-fA-F]{4}))*\"")
+        return token("\"([^\"\\\\]|\\\\.)*\"")
                 .map(StringEscapeUtils::unescapeJavaScript);
     }
 
@@ -70,21 +75,21 @@ public interface JsonParser<I> {
 
     default <A, R, B, P> Parser<R, I> jsonArray(Collector<Object, A, R> arrayCollector,
                                                 Collector<Map.Entry<String, Object>, B, P> objectCollector) {
-        return surroundedWith(separatedByZeroOrMore(jsonValue(arrayCollector, objectCollector), next(",")), next("\\["), next("]"))
+        return surroundedWith(separatedByZeroOrMore(jsonValue(arrayCollector, objectCollector), token(",")), token("\\["), token("]"))
                 .map(objectStream -> objectStream.collect(arrayCollector));
     }
 
 
     default <A, R, B, P> Parser<Map.Entry<String, Object>, I> jsonProperty(Collector<Object, A, R> arrayCollector,
                                                                            Collector<Map.Entry<String, Object>, B, P> objectCollector) {
-        return jsonString().flatMap(key -> next(":").flatMap(colon ->
+        return jsonString().flatMap(key -> token(":").flatMap(colon ->
                 jsonValue(arrayCollector, objectCollector).map(value ->
                         new AbstractMap.SimpleEntry<>(key, value))));
     }
 
     default <A, R, B, P> Parser<P, I> jsonObject(Collector<Object, A, R> arrayCollector,
                                                  Collector<Map.Entry<String, Object>, B, P> objectCollector) {
-        return surroundedWith(separatedByZeroOrMore(jsonProperty(arrayCollector, objectCollector), next(",")), next("\\{"), next("}"))
+        return surroundedWith(separatedByZeroOrMore(jsonProperty(arrayCollector, objectCollector), token(",")), token("\\{"), token("}"))
                 .map(entryStream -> entryStream.collect(objectCollector));
     }
 

@@ -32,50 +32,49 @@ import java.util.regex.Pattern;
  * @author Konrad Kleczkowski
  */
 public class StreamTokenizer {
+    private static final int BUFFER_SIZE = 8;
+
     private Readable source;
-    private CharBuffer buffer;
+    private CharBuffer buffer = CharBuffer.allocate(BUFFER_SIZE);
+    private boolean init;
 
     public StreamTokenizer(Readable source) {
-        this(source, CharBuffer.allocate(4096));
-    }
-
-    private StreamTokenizer(Readable source, CharBuffer buffer) {
         this.source = source;
-        this.buffer = buffer;
     }
 
     public String next(Pattern pattern) throws IOException {
         Matcher matcher = pattern.matcher(buffer);
         if (hasNext(matcher)) {
-            buffer.position(matcher.end());
+            buffer.position(buffer.position() + matcher.end());
             return matcher.group();
         }
         throw new NoSuchElementException(pattern.pattern());
     }
 
-    public boolean hasNext(Pattern pattern) throws IOException {
-        return hasNext(pattern.matcher(buffer));
-    }
-
     private boolean hasNext(Matcher matcher) throws IOException {
-        matcher.region(buffer.position(), buffer.limit());
         if (matcher.lookingAt()) {
-            return !(matcher.hitEnd() && !matcher.requireEnd()) || matchAgain(matcher);
+            return !(matcher.hitEnd() && !matcher.requireEnd()) || refreshAndAttempt(matcher);
         } else if (matcher.hitEnd()) {
-            return matchAgain(matcher);
+            return refreshAndAttempt(matcher);
         }
         return false;
     }
 
-    private boolean matchAgain(Matcher matcher) throws IOException {
-        readSome();
-        matcher.region(buffer.position(), buffer.limit());
+    private boolean refreshAndAttempt(Matcher matcher) throws IOException {
+        matcher.reset();
+        refreshBuffer();
         return matcher.lookingAt();
     }
 
-    private void readSome() throws IOException {
-        buffer.compact();
-        source.read(buffer);
+    private void refreshBuffer() throws IOException {
+        if (!init) {
+            buffer.clear();
+            source.read(buffer);
+            init = true;
+        } else {
+            buffer.compact();
+            source.read(buffer);
+        }
         buffer.flip();
     }
 }
