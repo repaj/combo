@@ -28,10 +28,10 @@ import java.util.Map;
 /**
  * @author Konrad Kleczkowski
  */
-public class LRUCache<K, V> extends LinkedHashMap<K, V> {
+class LRUCache<K, V> extends LinkedHashMap<K, V> {
     private int cacheSize;
 
-    public LRUCache(int cacheSize) {
+    LRUCache(int cacheSize) {
         super(16, 0.75f, true);
         this.cacheSize = cacheSize;
     }
