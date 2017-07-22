@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  * @author Konrad Kleczkowski
  */
 public class StreamTokenizer {
-    private static final int BUFFER_SIZE = 8;
+    private static final int BUFFER_SIZE = 8192;
 
     private Readable source;
     private CharBuffer buffer = CharBuffer.allocate(BUFFER_SIZE);
@@ -51,30 +51,33 @@ public class StreamTokenizer {
         throw new NoSuchElementException(pattern.pattern());
     }
 
+    public boolean hasNext(Pattern pattern) throws IOException {
+        return hasNext(pattern.matcher(buffer));
+    }
+
     private boolean hasNext(Matcher matcher) throws IOException {
-        if (matcher.lookingAt()) {
-            return !(matcher.hitEnd() && !matcher.requireEnd()) || refreshAndAttempt(matcher);
-        } else if (matcher.hitEnd()) {
-            return refreshAndAttempt(matcher);
+        initIfNeeded();
+        return (matcher.lookingAt() && !matcher.hitEnd()) || refreshAndAttempt(matcher);
+    }
+
+    private void initIfNeeded() throws IOException {
+        if (!init) {
+            buffer.clear();
+            source.read(buffer);
+            buffer.flip();
+            init = true;
         }
-        return false;
     }
 
     private boolean refreshAndAttempt(Matcher matcher) throws IOException {
         matcher.reset();
         refreshBuffer();
-        return matcher.lookingAt();
+        return matcher.lookingAt() && !matcher.hitEnd();
     }
 
     private void refreshBuffer() throws IOException {
-        if (!init) {
-            buffer.clear();
-            source.read(buffer);
-            init = true;
-        } else {
-            buffer.compact();
-            source.read(buffer);
-        }
+        buffer.compact();
+        source.read(buffer);
         buffer.flip();
     }
 }
