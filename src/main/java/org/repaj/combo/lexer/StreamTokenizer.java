@@ -31,6 +31,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * Stream tokenizer. Turns stream input into tokens predicted by regex pattern.
+ * It can skip some given pattern, but it's optional.
+ *
  * @author Konrad Kleczkowski
  */
 public class StreamTokenizer implements AutoCloseable {
@@ -45,23 +48,55 @@ public class StreamTokenizer implements AutoCloseable {
 
     private LRUCache<String, Pattern> patternCache = new LRUCache<>(16);
 
+    /**
+     * Creates tokenizer with whitespace skip pattern.
+     *
+     * @param source a source of characters
+     */
     public StreamTokenizer(Readable source) {
         this(source, Pattern.compile("\\s*"));
     }
 
+    /**
+     * Creates tokenizer with given skip pattern.
+     *
+     * @param source      a source of characters
+     * @param skipPattern a skip pattern
+     */
     public StreamTokenizer(Readable source, Pattern skipPattern) {
         this.source = Objects.requireNonNull(source);
         this.skipPattern = skipPattern;
     }
 
+    /**
+     * Changes skip pattern. If null, then skip is not preformed.
+     *
+     * @param skipPattern a skip pattern
+     */
     public void useSkipPattern(Pattern skipPattern) {
         this.skipPattern = skipPattern;
     }
 
+    /**
+     * Attempts to obtain next token with skipping.
+     *
+     * @param regex a regex string
+     * @return obtained next token
+     * @throws InputMismatchException if there's no token satisfying pattern
+     * @throws NoSuchElementException if source is closed or hit end of stream
+     */
     public String next(String regex) {
         return next(patternCache.computeIfAbsent(regex, Pattern::compile));
     }
 
+    /**
+     * Attempts to obtain next token with skipping.
+     *
+     * @param pattern a pattern
+     * @return obtained next token
+     * @throws InputMismatchException if there's no token satisfying pattern
+     * @throws NoSuchElementException if source is closed or hit end of stream
+     */
     public String next(Pattern pattern) {
         if (skipPattern != null) {
             rawNext(skipPattern);
@@ -69,6 +104,14 @@ public class StreamTokenizer implements AutoCloseable {
         return rawNext(pattern);
     }
 
+    /**
+     * Attempts to obtain next token without skipping.
+     *
+     * @param pattern a pattern
+     * @return obtained next token
+     * @throws InputMismatchException if there's no token satisfying pattern
+     * @throws NoSuchElementException if source is closed or hit end of stream
+     */
     public String rawNext(Pattern pattern) {
         while (true) {
             String token = getTokenFromBuffer(pattern);
@@ -136,6 +179,12 @@ public class StreamTokenizer implements AutoCloseable {
         }
     }
 
+    /**
+     * Closes underlying source of characters, if is implementing {@link AutoCloseable}.
+     *
+     * @throws Exception if source cannot be closed
+     * @see AutoCloseable#close()
+     */
     @Override
     public void close() throws Exception {
         if (!closed && source instanceof AutoCloseable) {
