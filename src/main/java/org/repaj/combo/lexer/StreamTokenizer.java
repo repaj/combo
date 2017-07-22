@@ -43,6 +43,8 @@ public class StreamTokenizer implements AutoCloseable {
     private boolean init;
     private boolean closed;
 
+    private LRUCache<String, Pattern> patternLRUCache = new LRUCache<>(16);
+
     public StreamTokenizer(Readable source) {
         this(source, Pattern.compile("\\s*"));
     }
@@ -56,14 +58,18 @@ public class StreamTokenizer implements AutoCloseable {
         this.skipPattern = skipPattern;
     }
 
-    public String next(Pattern pattern) throws IOException {
+    public String next(String regex) {
+        return next(patternLRUCache.computeIfAbsent(regex, Pattern::compile));
+    }
+
+    public String next(Pattern pattern) {
         if (skipPattern != null) {
             rawNext(skipPattern);
         }
         return rawNext(pattern);
     }
 
-    public String rawNext(Pattern pattern) throws IOException {
+    public String rawNext(Pattern pattern) {
         while (true) {
             String token = getTokenFromBuffer(pattern);
             if (!closed && token != null) {
@@ -77,7 +83,7 @@ public class StreamTokenizer implements AutoCloseable {
         }
     }
 
-    private String getTokenFromBuffer(Pattern pattern) throws IOException {
+    private String getTokenFromBuffer(Pattern pattern) {
         initBuffer();
 
         Matcher matcher = pattern.matcher(buffer);
@@ -98,17 +104,25 @@ public class StreamTokenizer implements AutoCloseable {
         return null;
     }
 
-    private void readSome() throws IOException {
+    private void readSome() {
         buffer.compact();
-        source.read(buffer);
+        try {
+            source.read(buffer);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
         buffer.flip();
         needInput = false;
     }
 
-    private void initBuffer() throws IOException {
+    private void initBuffer() {
         if (!init) {
             buffer.clear();
-            source.read(buffer);
+            try {
+                source.read(buffer);
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
             buffer.flip();
             init = true;
         }

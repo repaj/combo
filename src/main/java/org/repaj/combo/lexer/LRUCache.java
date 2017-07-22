@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package org.repaj.combo.utils;
+package org.repaj.combo.lexer;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
