@@ -46,6 +46,8 @@ public class StreamTokenizer implements AutoCloseable {
     private boolean init;
     private boolean closed;
 
+    private int position;
+
     private LRUCache<String, Pattern> patternCache = new LRUCache<>(16);
 
     /**
@@ -75,6 +77,15 @@ public class StreamTokenizer implements AutoCloseable {
      */
     public void useSkipPattern(Pattern skipPattern) {
         this.skipPattern = skipPattern;
+    }
+
+    /**
+     * Gets position.
+     *
+     * @return a position
+     */
+    public int getPosition() {
+        return position;
     }
 
     /**
@@ -137,6 +148,7 @@ public class StreamTokenizer implements AutoCloseable {
                 return null;
             }
             buffer.position(buffer.position() + matcher.end());
+            position += matcher.end();
             return matcher.group();
         }
 
