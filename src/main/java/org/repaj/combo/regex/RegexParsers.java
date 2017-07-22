@@ -20,7 +20,9 @@
  * THE SOFTWARE.
  */
 
-package org.repaj.combo;
+package org.repaj.combo.regex;
+
+import org.repaj.combo.Parser;
 
 import java.util.regex.Pattern;
 
