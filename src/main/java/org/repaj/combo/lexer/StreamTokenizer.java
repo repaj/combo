@@ -43,7 +43,7 @@ public class StreamTokenizer implements AutoCloseable {
     private boolean init;
     private boolean closed;
 
-    private LRUCache<String, Pattern> patternLRUCache = new LRUCache<>(16);
+    private LRUCache<String, Pattern> patternCache = new LRUCache<>(16);
 
     public StreamTokenizer(Readable source) {
         this(source, Pattern.compile("\\s*"));
@@ -59,7 +59,7 @@ public class StreamTokenizer implements AutoCloseable {
     }
 
     public String next(String regex) {
-        return next(patternLRUCache.computeIfAbsent(regex, Pattern::compile));
+        return next(patternCache.computeIfAbsent(regex, Pattern::compile));
     }
 
     public String next(Pattern pattern) {
