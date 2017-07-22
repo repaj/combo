@@ -99,39 +99,6 @@ public interface Parser<O, I> {
     }
 
     /**
-     * Creates parser that attempt to parse using this parser, and if this parser fails,
-     * newly created parser returns value.
-     *
-     * @param output an output value
-     * @return newly created {@code Parser} that attempts to parse
-     */
-    default Parser<O, I> orElseSucceed(O output) {
-        return orElseSucceed(() -> output);
-    }
-
-    /**
-     * Creates parser that attempt to parse using this parser, and if this parser fails,
-     * newly created parser returns supplied value.
-     *
-     * @param supplier an value supplier
-     * @return newly created {@code Parser} that attempts to parse
-     */
-    default Parser<O, I> orElseSucceed(Supplier<? extends O> supplier) {
-        return orElse(() -> succeed(supplier.get()));
-    }
-
-    /**
-     * Creates parser that attempt to parse using this parser, and if this parser fails,
-     * newly created parser fails with given message.
-     *
-     * @param message a fail message
-     * @return newly created {@code Parser} that attempts to parse
-     */
-    default Parser<O, I> orElseFail(String message) {
-        return input -> parse(input).recoverWith(cause -> Try.fail(new ParseException(message, cause)));
-    }
-
-    /**
      * A class representing result of parse process.
      *
      * @param <O> type of output
