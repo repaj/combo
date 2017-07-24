@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
  * @author Konrad Kleczkowski
  */
 public class StreamTokenizer implements AutoCloseable {
-    private CharBuffer buffer = CharBuffer.allocate(65536);
+    private CharBuffer buffer;
 
     private Readable source;
     private Pattern skipPattern;
@@ -66,8 +66,17 @@ public class StreamTokenizer implements AutoCloseable {
      * @param skipPattern a skip pattern
      */
     public StreamTokenizer(Readable source, Pattern skipPattern) {
-        this.source = Objects.requireNonNull(source);
+        this(source, skipPattern, 65536);
+    }
+
+    public StreamTokenizer(Readable source, Pattern skipPattern, int bufferSize) {
+        this(source, skipPattern, CharBuffer.allocate(bufferSize));
+    }
+
+    public StreamTokenizer(Readable source, Pattern skipPattern, CharBuffer buffer) {
+        this.source = source;
         this.skipPattern = skipPattern;
+        this.buffer = buffer;
     }
 
     /**
@@ -143,13 +152,14 @@ public class StreamTokenizer implements AutoCloseable {
         Matcher matcher = pattern.matcher(buffer);
 
         if (matcher.lookingAt()) {
-            if (matcher.hitEnd() && !matcher.requireEnd()) {
+            if (matcher.hitEnd() && !matcher.requireEnd() && buffer.position() > 0) {
                 needInput = true;
                 return null;
             }
+            String match = matcher.group();
             buffer.position(buffer.position() + matcher.end());
             position += matcher.end();
-            return matcher.group();
+            return match;
         }
 
         if (matcher.hitEnd() && buffer.position() > 0) {
@@ -167,6 +177,7 @@ public class StreamTokenizer implements AutoCloseable {
             throw new IllegalStateException(e);
         }
         buffer.flip();
+
         needInput = false;
     }
 
