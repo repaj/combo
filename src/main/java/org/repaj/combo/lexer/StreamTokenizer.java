@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.nio.CharBuffer;
 import java.util.InputMismatchException;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -69,11 +68,18 @@ public class StreamTokenizer implements AutoCloseable {
         this(source, skipPattern, 65536);
     }
 
+    /**
+     * Creates tokenizer with given skip pattern and buffer size
+     *
+     * @param source      a source of characters
+     * @param skipPattern a skip pattern
+     * @param bufferSize  buffer size
+     */
     public StreamTokenizer(Readable source, Pattern skipPattern, int bufferSize) {
         this(source, skipPattern, CharBuffer.allocate(bufferSize));
     }
 
-    public StreamTokenizer(Readable source, Pattern skipPattern, CharBuffer buffer) {
+    private StreamTokenizer(Readable source, Pattern skipPattern, CharBuffer buffer) {
         this.source = source;
         this.skipPattern = skipPattern;
         this.buffer = buffer;
@@ -146,6 +152,20 @@ public class StreamTokenizer implements AutoCloseable {
         }
     }
 
+    /**
+     * Closes underlying source of characters, if is implementing {@link AutoCloseable}.
+     *
+     * @throws Exception if source cannot be closed
+     * @see AutoCloseable#close()
+     */
+    @Override
+    public void close() throws Exception {
+        if (!closed && source instanceof AutoCloseable) {
+            ((AutoCloseable) source).close();
+            closed = true;
+        }
+    }
+
     private String getTokenFromBuffer(Pattern pattern) {
         initBuffer();
 
@@ -199,20 +219,6 @@ public class StreamTokenizer implements AutoCloseable {
             throw new InputMismatchException();
         } else {
             throw new NoSuchElementException();
-        }
-    }
-
-    /**
-     * Closes underlying source of characters, if is implementing {@link AutoCloseable}.
-     *
-     * @throws Exception if source cannot be closed
-     * @see AutoCloseable#close()
-     */
-    @Override
-    public void close() throws Exception {
-        if (!closed && source instanceof AutoCloseable) {
-            ((AutoCloseable) source).close();
-            closed = true;
         }
     }
 }
