@@ -40,7 +40,7 @@ public class RepetitionParsers {
      * @return described parser
      */
     public static <O, I> Parser<Optional<O>, I> zeroOrOne(Parser<O, I> parser) {
-        return parser.map(Optional::ofNullable).orElseSucceed(Optional.empty());
+        return parser.map(Optional::ofNullable).orElse(() -> Parser.succeed(Optional.empty()));
     }
 
     /**
@@ -52,7 +52,7 @@ public class RepetitionParsers {
      * @return described parser
      */
     public static <O, I> Parser<Stream<O>, I> zeroOrMore(Parser<O, I> parser) {
-        return oneOrMore(parser).orElseSucceed(Stream.empty());
+        return oneOrMore(parser).orElse(() -> Parser.succeed(Stream.empty()));
     }
 
     /**
@@ -131,7 +131,7 @@ public class RepetitionParsers {
      * @return described parser
      */
     public static <O, I> Parser<Stream<O>, I> separatedByZeroOrMore(Parser<O, I> parser, Parser<?, I> separator) {
-        return separatedByOneOrMore(parser, separator).orElseSucceed(Stream.empty());
+        return separatedByOneOrMore(parser, separator).orElse(() -> Parser.succeed(Stream.empty()));
     }
 
     /**
